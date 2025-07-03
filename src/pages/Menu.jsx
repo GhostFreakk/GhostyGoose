@@ -1,8 +1,10 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import '../../styles/style_menu.css';
 
 function Menu() {
+  const [alienMode, setAlienMode] = useState(false);
+  const navigate = useNavigate();
   return (
     <>
       <audio autoPlay loop>
@@ -47,7 +49,21 @@ function Menu() {
         </div>
         <div className="play_field__main">
           <div className="play_field__main__menu">
-            <Link className="play_field__main__menu__level" to="/level-01" tabIndex={1} accessKey="1">Level 1</Link>
+            <button
+              className="play_field__main__menu__level"
+              style={{ marginBottom: '1em', background: alienMode ? '#222' : '#eee', color: alienMode ? '#0ff' : '#222', border: '2px solid #0ff', borderRadius: '1em', fontWeight: 'bold' }}
+              onClick={() => setAlienMode(m => !m)}
+            >
+              {alienMode ? 'Alien Mode: ON' : 'Alien Mode: OFF'}
+            </button>
+            <button
+              className="play_field__main__menu__level"
+              onClick={() => navigate('/level-01', { state: { alienMode } })}
+              tabIndex={1}
+              accessKey="1"
+            >
+              {alienMode ? 'Alien Invasion' : 'Level 1'}
+            </button>
             <h1 className="play_field__main__sticker__title_mobile">Ghosty<br />Goose</h1>
           </div>
           <div className="play_field__main__sticker">

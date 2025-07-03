@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import '../../styles/style_level_01.css';
 
 const SHOT_AUDIO = '/audio/shot.mp3';
@@ -9,14 +9,15 @@ const GAME_AUDIO = '/audio/game.mp3';
 const DUCKS_TO_KILL = 25;
 const GAME_TIME = 3 * 60; // 10 minutes in seconds
 const DUCKS_ON_SCREEN = 10;
-const DUCK_SIZE = 100;
+const DUCK_SIZE_NORMAL = 100;
+const DUCK_SIZE_ALIEN = 140;
 const DUCK_SPEED_MIN = 1.5;
 const DUCK_SPEED_MAX = 3.5;
 const DUCK_VERTICAL_SPEED = 0.7;
 
 function getRandomY() {
   const minY = 20;
-  const maxY = window.innerHeight * 0.86 - DUCK_SIZE - 20;
+  const maxY = window.innerHeight * 0.86 - DUCK_SIZE_NORMAL - 20;
   return Math.random() * (maxY - minY) + minY;
 }
 
@@ -31,7 +32,7 @@ function createDuck(id) {
   const fromLeft = Math.random() < 0.5;
   return {
     id,
-    x: fromLeft ? -DUCK_SIZE : window.innerWidth,
+    x: fromLeft ? -DUCK_SIZE_NORMAL : window.innerWidth,
     y: getRandomY(),
     ...getRandomVelocity(fromLeft),
     fromLeft,
@@ -41,6 +42,8 @@ function createDuck(id) {
 
 function Level01() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const alienMode = location.state && location.state.alienMode;
   const [killed, setKilled] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [win, setWin] = useState(false);
@@ -53,6 +56,15 @@ function Level01() {
   const animRef = useRef();
   const playFieldRef = useRef();
   const [cursor, setCursor] = useState('crosshair');
+
+  // Swap assets and theme for Alien mode
+  const DUCK_IMAGE = alienMode ? '/img/alien.gif' : '/img/Duck.gif';
+  const SHOT_IMAGE = '/img/shot.png';
+  const PLAYFIELD_BG = alienMode ? "url('/img/space.jpg')" : "url('/img/Play_field.jpg')";
+  const THEME_TEXT = alienMode ? 'Alien Invasion' : 'Ghosty Goose';
+  const GAME_AUDIO_SRC = alienMode ? '/audio/alien-game.mp3' : GAME_AUDIO;
+  const DUCK_AUDIO_SRC = alienMode ? '/audio/alien.mp3' : DUCK_AUDIO;
+  const DUCK_SIZE = alienMode ? DUCK_SIZE_ALIEN : DUCK_SIZE_NORMAL;
 
   // Timer logic
   useEffect(() => {
@@ -142,7 +154,7 @@ function Level01() {
   // Handle duck kill
   const handleDuck = useCallback((id) => {
     if (paused) return;
-    const audio = new window.Audio(DUCK_AUDIO);
+    const audio = new window.Audio(DUCK_AUDIO_SRC);
     audio.play().catch(err => {
       console.log('Audio play error (duck):', err);
     });
@@ -211,12 +223,12 @@ function Level01() {
   return (
     <>
       <audio autoPlay loop>
-        <source src={GAME_AUDIO} type="audio/mpeg" />
+        <source src={GAME_AUDIO_SRC} type="audio/mpeg" />
       </audio>
       <section
         className="play_field"
         ref={playFieldRef}
-        style={{ cursor }}
+        style={{ cursor, backgroundImage: PLAYFIELD_BG }}
       >
         {/* Top bar: Timer and Counter */}
         <div style={{
@@ -236,8 +248,8 @@ function Level01() {
           letterSpacing: '2px',
         }}>
           <div>Time: {minutes}:{seconds}</div>
-          <div style={{fontWeight: 700}}>Ghosty Goose</div>
-          <div>Ducks: {killed} / {DUCKS_TO_KILL}</div>
+          <div style={{fontWeight: 700}}>{THEME_TEXT}</div>
+          <div>{alienMode ? 'Aliens' : 'Ducks'}: {killed} / {DUCKS_TO_KILL}</div>
         </div>
         <div className="play_field__sky" style={{position: 'relative', width: '100%', height: '86vh', overflow: 'hidden'}}>
           {!gameOver && !win && !paused && ducks.map(duck => (
@@ -267,8 +279,8 @@ function Level01() {
               >
                 <img
                   className="play_field__sky__duck__label__img"
-                  src={duck.shot ? '/img/shot.png' : '/img/Duck.gif'}
-                  alt={duck.shot ? 'Shot' : 'Duck'}
+                  src={duck.shot ? SHOT_IMAGE : DUCK_IMAGE}
+                  alt={duck.shot ? (alienMode ? 'Shot Alien' : 'Shot Duck') : (alienMode ? 'Alien' : 'Duck')}
                   style={{
                     width: DUCK_SIZE,
                     height: DUCK_SIZE,
